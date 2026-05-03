@@ -12,6 +12,7 @@ from handlers.start import router as start_router
 from handlers.calc import router as calc_router
 from handlers.about import router as about_router
 from handlers.menu import router as menu_router
+from handlers.help import router as help_router
 
 async def main():
     # Инициализация базы данных
@@ -29,6 +30,8 @@ async def main():
     dp.include_router(start_router)
     dp.include_router(calc_router)
     dp.include_router(about_router)
+    dp.include_router(menu_router)
+    dp.include_router(help_router)
 
     print("🚀 Бот успешно запущен!")
     await dp.start_polling(bot)

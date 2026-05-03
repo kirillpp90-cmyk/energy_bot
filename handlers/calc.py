@@ -5,7 +5,7 @@ from asyncio import sleep
 from aiogram.filters import Command
 
 from states import CalcState
-from keyboards import cancel_kb
+from keyboards import cancel_kb, calculator_kb
 from utils import calculate_energy
 from database import init_db   # пока не используем, но оставим для будущего
 
@@ -13,6 +13,7 @@ router = Router(name="calc_router")
 
 
 @router.message(Command("calc"))
+@router.message(F.text == '📊 Калькулятор')
 async def start_calc(message: Message, state: FSMContext):
     await message.answer(
         "Введите мощность прибора в Ваттах (например: 1500):",
@@ -24,7 +25,7 @@ async def start_calc(message: Message, state: FSMContext):
 @router.message(F.text.casefold() == "отмена")
 async def otmena(message: Message, state: FSMContext):
     await state.clear()
-    await message.answer("Расчёт отменён.", reply_markup=None)
+    await message.answer("❌Отменено❌", reply_markup=calculator_kb)
 
 
 @router.message(CalcState.waiting_power)
@@ -91,7 +92,7 @@ async def process_tariff(message: Message, state: FSMContext):
             f"Стоимость: <b>{cost:.2f}</b> рублей",
             parse_mode="HTML"
         )
-
+        await message.answer('Продолжим?', reply_markup=calculator_kb)
         await state.clear()
 
     except ValueError:
