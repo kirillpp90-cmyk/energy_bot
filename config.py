@@ -6,6 +6,8 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
+admin_ids = [5548414556, 1347913056]
+
 # Если токен всё равно не загрузился — используем прямую запись (временное решение)
 if not BOT_TOKEN:
     BOT_TOKEN = "8603742193:AAH0pKqQ9-bTJvG7iBPAeDyrw_hfJ8Xiyxc"   # ← твой токен

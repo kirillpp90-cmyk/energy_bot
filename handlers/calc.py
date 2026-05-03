@@ -16,7 +16,8 @@ router = Router(name="calc_router")
 @router.message(F.text == '📊 Калькулятор')
 async def start_calc(message: Message, state: FSMContext):
     await message.answer(
-        "Введите мощность прибора в Ваттах (например: 1500):",
+        "⚡ Введите мощность прибора в Ваттах\n\n"
+        "Например: 1500 (для чайника) или 60 (для лампы)",
         reply_markup=cancel_kb
     )
     await state.set_state(CalcState.waiting_power)
@@ -33,10 +34,10 @@ async def process_power(message: Message, state: FSMContext):
     try:
         power = float(message.text.replace(',', '.'))
         await state.update_data(power=power)
-        await message.answer("Теперь введите количество часов работы в сутки:")
+        await message.answer("⏰ Теперь введите количество часов работы в сутки:")
         await state.set_state(CalcState.waiting_hours)
     except ValueError:
-        await message.answer("❌ Ошибка! Введите пожалуйста число.", reply_markup=cancel_kb)
+        await message.answer("❌ Ошибка! Пожалуйста, введите корректное число.", reply_markup=cancel_kb)
 
 
 @router.message(CalcState.waiting_hours)
@@ -44,10 +45,10 @@ async def process_hours(message: Message, state: FSMContext):
     try:
         hours = float(message.text.replace(',', '.'))
         await state.update_data(hours=hours)
-        await message.answer("Теперь введите количество дней:")
+        await message.answer("📅 Теперь введите количество дней:")
         await state.set_state(CalcState.waiting_days)
     except ValueError:
-        await message.answer("❌ Ошибка! Введите пожалуйста число.", reply_markup=cancel_kb)
+        await message.answer("❌ Ошибка! Пожалуйста, введите корректное число.", reply_markup=cancel_kb)
 
 
 @router.message(CalcState.waiting_days)
@@ -55,10 +56,10 @@ async def process_days(message: Message, state: FSMContext):
     try:
         days = float(message.text.replace(',', '.'))
         await state.update_data(days=days)
-        await message.answer("Теперь введите тариф за 1 кВт·ч (в рублях):")
+        await message.answer("💰 Теперь введите тариф за 1 кВт·ч (в рублях):")
         await state.set_state(CalcState.waiting_tariff)
     except ValueError:
-        await message.answer("❌ Ошибка! Введите пожалуйста число.", reply_markup=cancel_kb)
+        await message.answer("❌ Ошибка! Пожалуйста, введите корректное число.", reply_markup=cancel_kb)
 
 
 @router.message(CalcState.waiting_tariff)
@@ -75,7 +76,7 @@ async def process_tariff(message: Message, state: FSMContext):
         )
 
         # Небольшая анимация подсчёта (как было у тебя)
-        msg = await message.answer("Начинается подсчёт...")
+        msg = await message.answer("🔄 Начинаю расчёт...")
         await sleep(0.6)
         await msg.edit_text("33%...")
         await sleep(0.4)
@@ -86,14 +87,12 @@ async def process_tariff(message: Message, state: FSMContext):
         await msg.edit_text("100%...")
         await sleep(0.3)
 
-        await msg.edit_text(
-            f"✅ Готово!\n\n"
-            f"Энергопотребление: <b>{total_kwh:.2f}</b> кВт·ч\n"
-            f"Стоимость: <b>{cost:.2f}</b> рублей",
-            parse_mode="HTML"
-        )
-        await message.answer('Продолжим?', reply_markup=calculator_kb)
+        await msg.edit_text(f"📊 Результаты расчёта:\n\n"
+                           f"⚡ Энергопотребление: <b>{total_kwh:.2f}</b> кВт·ч\n"
+                           f"💰 Стоимость: <b>{cost:.2f}</b> рублей\n\n"
+                           f"🎉 Расчёт завершён успешно!", parse_mode="HTML")
+        await message.answer('🔄 Хотите рассчитать что-то ещё?', reply_markup=calculator_kb)
         await state.clear()
 
     except ValueError:
-        await message.answer("❌ Ошибка! Введите пожалуйста число.", reply_markup=cancel_kb)
+        await message.answer("❌ Ошибка! Пожалуйста, введите корректное число.", reply_markup=cancel_kb)

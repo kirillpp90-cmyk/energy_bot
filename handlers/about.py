@@ -7,7 +7,13 @@ router = Router()
 @router.message(F.text == 'ℹ️ О боте')
 @router.message(Command('about'))
 async def about(message: Message):
-    await message.answer(f'ℹ️ Бот-калькулятор энергопотребления\n\n'
-                         'Версия 1.0\n\n'
-                         f'Автор: <a href="https://t.me/sherek008">{message.from_user.full_name}</a>\n'
-                         'Команды: /start, /calc, /about, /menu, /help', parse_mode='HTML')
+    await message.answer(f'ℹ️ <b>Бот-калькулятор энергопотребления</b>\n\n'
+                         '🔋 Версия 1.0\n\n'
+                         '👨‍💻 Автор: <a href="https://t.me/sherek008">Кирилл</a>\n\n'
+                         '📋 <b>Доступные команды:</b>\n'
+                         '/start - Начать работу\n'
+                         '/calc - Калькулятор\n'
+                         '/about - О боте\n'
+                         '/menu - Главное меню\n'
+                         '/help - Помощь\n\n'
+                         '🎯 Рассчитайте энергопотребление ваших приборов!', parse_mode='HTML')

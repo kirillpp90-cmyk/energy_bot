@@ -9,3 +9,5 @@ class CalcState(StatesGroup):
 class HelpState(StatesGroup):
     waiting_question = State()
 
+class AdminStates(StatesGroup):
+    waiting_mailing_text = State()

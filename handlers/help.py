@@ -5,7 +5,7 @@ from aiogram.filters import Command
 
 from keyboards import cancel_kb, calculator_kb
 from states import HelpState
-from admin import admin_ids
+from config import admin_ids
 
 router = Router()
 
