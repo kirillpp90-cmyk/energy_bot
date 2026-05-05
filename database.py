@@ -54,7 +54,7 @@ async def init_db():
     await connect.commit()
     await cursor.close()
     await connect.close()
-    print("✅ База данных инициализирована (db.db) с таблицами users и devices")
+    print("База данных инициализирована (db.db) с таблицами users и devices")
 
 
 async def get_or_create_user(user_id: int):

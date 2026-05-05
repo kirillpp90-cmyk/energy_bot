@@ -8,8 +8,9 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 admin_ids = [5548414556, 1347913056]
 
-# Если токен всё равно не загрузился — используем прямую запись (временное решение)
+# Проверка наличия токена
 if not BOT_TOKEN:
-    BOT_TOKEN = "8603742193:AAH0pKqQ9-bTJvG7iBPAeDyrw_hfJ8Xiyxc"   # ← твой токен
+    raise ValueError("BOT_TOKEN не найден! Установите его в .env файле")
 
-print(f"Токен загружен: {BOT_TOKEN[:20]}...")   # Для проверки
+print(f"Токен загружен: {BOT_TOKEN[:20]}...")
+

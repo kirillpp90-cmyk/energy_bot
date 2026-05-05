@@ -2,4 +2,5 @@
 db.db
 __pycache__/
 .venv/
+nul
 *.pyc
