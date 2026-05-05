@@ -9,7 +9,12 @@ router = Router()
 
 @router.message(Command("start"))
 async def cmd_start(message: Message):
-    await get_or_create_user(message.from_user.id)
+    await get_or_create_user(
+        message.from_user.id,
+        message.from_user.first_name,
+        message.from_user.last_name,
+        message.from_user.username
+    )
     await message.answer(
         f"👋 Привет, {message.from_user.full_name}!\n\n"
         "⚡ <b>Добро пожаловать в бот-калькулятор энергопотребления!</b>\n\n"

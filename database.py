@@ -35,7 +35,10 @@ async def init_db():
     # Таблица users
     await cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
-            user_id INTEGER PRIMARY KEY
+            user_id INTEGER PRIMARY KEY,
+            username TEXT,
+            first_name TEXT,
+            last_name TEXT
         )
     ''')
 
@@ -57,7 +60,7 @@ async def init_db():
     print("База данных инициализирована (db.db) с таблицами users и devices")
 
 
-async def get_or_create_user(user_id: int):
+async def get_or_create_user(user_id: int, first_name: str = None, last_name: str = None, username: str = None):
     """Проверяет, есть ли пользователь в БД, если нет — создаёт с защитой от гонок"""
     async with _db_lock:  # Блокируем запись для всех, кто вызывает эту функцию одновременно
         connect = await aiosqlite.connect('db.db')
@@ -66,7 +69,8 @@ async def get_or_create_user(user_id: int):
             await cursor.execute('SELECT user_id FROM users WHERE user_id = ?', (user_id,))
             exists = await cursor.fetchone()
             if not exists:
-                await cursor.execute('INSERT INTO users (user_id) VALUES (?)', (user_id,))
+                await cursor.execute('INSERT INTO users (user_id, first_name, last_name, username) VALUES (?, ?, ?, ?)', 
+                                   (user_id, first_name, last_name, username))
                 await connect.commit()
         finally:
             await cursor.close()
