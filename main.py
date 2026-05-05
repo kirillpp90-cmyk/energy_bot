@@ -35,7 +35,7 @@ async def main():
     dp.include_router(help_router)
     dp.include_router(admin_router)
 
-    print("🚀 Бот успешно запущен и готов к работе!")
+    print("Бот успешно запущен и готов к работе!")
     await dp.start_polling(bot)
 
 

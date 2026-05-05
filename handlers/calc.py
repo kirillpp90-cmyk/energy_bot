@@ -1,11 +1,11 @@
 from aiogram import Router, F
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from asyncio import sleep
 from aiogram.filters import Command
 
 from states import CalcState
-from keyboards import cancel_kb, calculator_kb
+from keyboards import cancel_kb, calculator_kb, save_after_calc_kb
 from utils import calculate_energy
 from database import init_db   # пока не используем, но оставим для будущего
 
@@ -91,8 +91,95 @@ async def process_tariff(message: Message, state: FSMContext):
                            f"⚡ Энергопотребление: <b>{total_kwh:.2f}</b> кВт·ч\n"
                            f"💰 Стоимость: <b>{cost:.2f}</b> рублей\n\n"
                            f"🎉 Расчёт завершён успешно!", parse_mode="HTML")
-        await message.answer('🔄 Хотите рассчитать что-то ещё?', reply_markup=calculator_kb)
-        await state.clear()
+        
+        # Сохраняем данные в состоянии для возможного сохранения прибора
+        await state.update_data(
+            power=data['power'],
+            hours=data['hours'], 
+            days=data['days'],
+            tariff=tariff,
+            total_kwh=total_kwh,
+            cost=cost
+        )
+        
+        await message.answer('💾 Хотите сохранить этот прибор?', reply_markup=save_after_calc_kb)
 
     except ValueError:
         await message.answer("❌ Ошибка! Пожалуйста, введите корректное число.", reply_markup=cancel_kb)
+
+
+@router.callback_query(F.data == 'save_from_calc')
+async def save_from_calc(callback: CallbackQuery, state: FSMContext):
+    """Сохранение прибора из данных калькулятора"""
+    await callback.answer()
+    
+    # Получаем данные из состояния
+    data = await state.get_data()
+    
+    # Запрашиваем только название прибора, остальные данные уже есть
+    await state.set_state(CalcState.waiting_device_name)
+    await callback.message.answer(
+        "✍️ Введите название для сохранения прибора:\n\n"
+        f"📊 Мощность: {data['power']} Вт\n"
+        f"⏰ Часов в день: {data['hours']}\n"
+        f"📅 Дней: {data['days']}"
+    )
+
+
+@router.callback_query(F.data == 'new_calc')
+async def new_calc(callback: CallbackQuery, state: FSMContext):
+    """Начать новый расчет"""
+    await callback.answer()
+    await state.clear()
+    await callback.message.answer(
+        "⚡ Введите мощность прибора в Ваттах\n\n"
+        "Например: 1500 (для чайника) или 60 (для лампы)",
+        reply_markup=cancel_kb
+    )
+    await state.set_state(CalcState.waiting_power)
+
+
+@router.callback_query(F.data == 'main_menu')
+async def back_to_main_menu(callback: CallbackQuery, state: FSMContext):
+    """Возврат в главное меню"""
+    await callback.answer()
+    await state.clear()
+    await callback.message.answer(
+        "🏠 Вы в главном меню", 
+        reply_markup=calculator_kb
+    )
+
+
+@router.message(CalcState.waiting_device_name)
+async def process_device_name_from_calc(message: Message, state: FSMContext):
+    """Обработка названия прибора из калькулятора"""
+    try:
+        name = str(message.text.replace(',', '.'))
+        user_id = int(message.from_user.id)
+        
+        # Получаем сохраненные данные из калькулятора
+        data = await state.get_data()
+        power = data['power']
+        hours = data['hours']
+        days = int(data['days'])  # days может быть float, преобразуем в int
+        
+        # Сохраняем в базу данных
+        from database import add_device
+        device_id = await add_device(user_id, name, power, hours, days)
+        
+        # Очищаем состояние
+        await state.clear()
+        
+        # Отправляем подтверждение
+        await message.answer(
+            f'✅ Прибор "{name}" успешно сохранен!\n'
+            f'📊 Мощность: {power} Вт\n'
+            f'⏰ Часов в день: {hours}\n'
+            f'📅 Дней в месяц: {days}\n\n'
+            f'ID прибора: {device_id}\n\n'
+            f'🔄 Хотите рассчитать что-то ещё?',
+            reply_markup=calculator_kb
+        )
+    except Exception as e:
+        await message.answer(f'❌ Ошибка при сохранении: {e}\n\nПопробуйте еще раз:', reply_markup=calculator_kb)
+        await state.clear()

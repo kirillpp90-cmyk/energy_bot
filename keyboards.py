@@ -27,3 +27,12 @@ admin_cancel_kb = InlineKeyboardMarkup(
         [InlineKeyboardButton(text="🔙 Назад в админ-панель", callback_data="admin_back")]
     ]
 )
+
+
+save_after_calc_kb = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [InlineKeyboardButton(text="💾 Сохранить прибор", callback_data='save_from_calc')],
+        [InlineKeyboardButton(text="🔄 Новый расчет", callback_data="new_calc")],
+        [InlineKeyboardButton(text="🏠 Главное меню", callback_data="main_menu")]
+    ]
+)
