@@ -1,4 +1,4 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
 cancel_kb = ReplyKeyboardMarkup(
     keyboard=[
@@ -12,4 +12,18 @@ calculator_kb = ReplyKeyboardMarkup(
         [KeyboardButton(text='ℹ️ О боте'), KeyboardButton(text='❓ Помощь')]
     ],
     resize_keyboard=True
+)
+
+admin_back_kb = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [InlineKeyboardButton(text="🔙 Назад в админ-панель", callback_data="admin_back")],
+        [InlineKeyboardButton(text="🏠 Главное меню", callback_data="main_menu")]
+    ]
+)
+
+admin_cancel_kb = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [InlineKeyboardButton(text="❌ Отмена", callback_data="admin_cancel")],
+        [InlineKeyboardButton(text="🔙 Назад в админ-панель", callback_data="admin_back")]
+    ]
 )

@@ -27,6 +27,17 @@ async def get_all_users_id():
     return [user[0] for user in users]
 
 
+async def get_all_users_info():
+    """Возвращает список всех пользователей с их данными (user_id, username, first_name, last_name)"""
+    connect = await aiosqlite.connect('db.db')
+    cursor = await connect.cursor()
+    await cursor.execute('SELECT user_id, username, first_name, last_name FROM users')
+    users = await cursor.fetchall()
+    await cursor.close()
+    await connect.close()
+    return users
+
+
 async def init_db():
     """Создаёт таблицы users и devices, если их нет"""
     connect = await aiosqlite.connect('db.db')
