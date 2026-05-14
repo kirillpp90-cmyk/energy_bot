@@ -8,7 +8,7 @@ cancel_kb = ReplyKeyboardMarkup(
 
 calculator_kb = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text='📊 Калькулятор')],
+        [KeyboardButton(text='📊 Калькулятор'), KeyboardButton(text='📱 Приборы')],
         [KeyboardButton(text='ℹ️ О боте'), KeyboardButton(text='❓ Помощь')]
     ],
     resize_keyboard=True

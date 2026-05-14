@@ -3,6 +3,7 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKe
 from aiogram.filters import Command
 
 from database import get_user_devices, delete_device
+from keyboards import calculator_kb
 
 router = Router()
 
@@ -43,6 +44,6 @@ async def delete_device_handler(callback: CallbackQuery):
 
     if deleted:
         await callback.answer("✅ Прибор удалён")
-        await callback.message.answer("✅ Прибор успешно удалён!")
+        await callback.message.answer("✅ Прибор успешно удалён!", reply_markup=calculator_kb)
     else:
         await callback.answer("❌ Не удалось удалить прибор")
