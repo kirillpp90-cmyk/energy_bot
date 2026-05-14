@@ -3,4 +3,5 @@ db.db
 __pycache__/
 .venv/
 nul
+.idea
 *.pyc

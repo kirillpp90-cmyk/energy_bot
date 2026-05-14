@@ -8,7 +8,7 @@ from config import admin_ids
 from database import get_user_count, get_all_users_id, get_all_users_info
 import asyncio
 
-from keyboards import cancel_kb, admin_back_kb, admin_cancel_kb
+from keyboards import cancel_kb, admin_back_kb, admin_cancel_kb, calculator_kb
 from states import AdminStates
 
 class IsAdmin(BaseFilter):

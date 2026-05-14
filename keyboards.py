@@ -36,3 +36,4 @@ save_after_calc_kb = InlineKeyboardMarkup(
         [InlineKeyboardButton(text="🏠 Главное меню", callback_data="main_menu")]
     ]
 )
+
