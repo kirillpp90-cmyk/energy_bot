@@ -33,6 +33,9 @@ async def otmena(message: Message, state: FSMContext):
 async def process_power(message: Message, state: FSMContext):
     try:
         power = float(message.text.replace(',', '.'))
+        if power < 0:
+            await message.answer("❌ Мощность не может быть отрицательной. Введите корректное число:", reply_markup=cancel_kb)
+            return
         await state.update_data(power=power)
         await message.answer("⏰ Теперь введите количество часов работы в сутки:")
         await state.set_state(CalcState.waiting_hours)
@@ -44,6 +47,9 @@ async def process_power(message: Message, state: FSMContext):
 async def process_hours(message: Message, state: FSMContext):
     try:
         hours = float(message.text.replace(',', '.'))
+        if hours < 0:
+            await message.answer("❌ Часы не могут быть отрицательными. Введите корректное число:", reply_markup=cancel_kb)
+            return
         await state.update_data(hours=hours)
         await message.answer("📅 Теперь введите количество дней:")
         await state.set_state(CalcState.waiting_days)
@@ -55,6 +61,9 @@ async def process_hours(message: Message, state: FSMContext):
 async def process_days(message: Message, state: FSMContext):
     try:
         days = float(message.text.replace(',', '.'))
+        if days < 0:
+            await message.answer("❌ Количество дней не может быть отрицательным. Введите корректное число:", reply_markup=cancel_kb)
+            return
         await state.update_data(days=days)
         await message.answer("💰 Теперь введите тариф за 1 кВт·ч (в рублях):")
         await state.set_state(CalcState.waiting_tariff)
@@ -66,6 +75,9 @@ async def process_days(message: Message, state: FSMContext):
 async def process_tariff(message: Message, state: FSMContext):
     try:
         tariff = float(message.text.replace(',', '.'))
+        if tariff < 0:
+            await message.answer("❌ Тариф не может быть отрицательным. Введите корректное число:", reply_markup=cancel_kb)
+            return
         data = await state.get_data()
 
         total_kwh, cost = calculate_energy(
@@ -181,5 +193,7 @@ async def process_device_name_from_calc(message: Message, state: FSMContext):
             reply_markup=calculator_kb
         )
     except Exception as e:
-        await message.answer(f'❌ Ошибка при сохранении: {e}\n\nПопробуйте еще раз:', reply_markup=calculator_kb)
+        # Логируем ошибку для отладки, пользователю показываем общее сообщение
+        print(f"Ошибка при сохранении прибора: {e}")
+        await message.answer('❌ Ошибка при сохранении. Попробуйте еще раз.', reply_markup=calculator_kb)
         await state.clear()

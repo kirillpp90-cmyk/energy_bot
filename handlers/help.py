@@ -20,6 +20,10 @@ async def process_question(message: Message, state: FSMContext, bot: Bot):
     msg = message.text
     id_user = message.from_user.id
     username_user = message.from_user.username
-    await bot.send_message(admin_ids[0], f"📨 Новое сообщение в поддержку!\n\n👤 Пользователь: {id_user} (@{username_user})\n\n💬 Сообщение:\n{msg}")
-    await state.clear()
-    await message.answer("✅ Ваше сообщение успешно отправлено в поддержку! 🎯\n\nМы свяжемся с вами в ближайшее время. 💙", reply_markup=calculator_kb)
+    if admin_ids:
+        await bot.send_message(admin_ids[0], f"📨 Новое сообщение в поддержку!\n\n👤 Пользователь: {id_user} (@{username_user})\n\n💬 Сообщение:\n{msg}")
+        await state.clear()
+        await message.answer("✅ Ваше сообщение успешно отправлено в поддержку! 🎯\n\nМы свяжемся с вами в ближайшее время. 💙", reply_markup=calculator_kb)
+    else:
+        await state.clear()
+        await message.answer("❌ Не удалось отправить сообщение. Администраторы не настроены.", reply_markup=calculator_kb)

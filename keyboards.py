@@ -9,7 +9,8 @@ cancel_kb = ReplyKeyboardMarkup(
 calculator_kb = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text='📊 Калькулятор'), KeyboardButton(text='📱 Приборы')],
-        [KeyboardButton(text='ℹ️ О боте'), KeyboardButton(text='❓ Помощь')]
+        [KeyboardButton(text='ℹ️ О боте'), KeyboardButton(text='❓ Помощь')],
+        [KeyboardButton(text='⚡ Быстрый расчёт')]
     ],
     resize_keyboard=True
 )
@@ -37,3 +38,11 @@ save_after_calc_kb = InlineKeyboardMarkup(
     ]
 )
 
+quick_calc_kb = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [InlineKeyboardButton(text='1-ая комнатная квартира', callback_data='quick_1room')],
+        [InlineKeyboardButton(text='2-ая комнатная квартира', callback_data='quick_2room')],
+        [InlineKeyboardButton(text='3-ая комнатная квартира', callback_data='quick_3room')],
+        [InlineKeyboardButton(text='Дом', callback_data='quick_house')],
+    ]
+)
