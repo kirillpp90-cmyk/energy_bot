@@ -44,5 +44,6 @@ quick_calc_kb = InlineKeyboardMarkup(
         [InlineKeyboardButton(text='2-ая комнатная квартира', callback_data='quick_2room')],
         [InlineKeyboardButton(text='3-ая комнатная квартира', callback_data='quick_3room')],
         [InlineKeyboardButton(text='Дом', callback_data='quick_house')],
+        [InlineKeyboardButton(text="❌ Отмена", callback_data="otmena")]
     ]
 )

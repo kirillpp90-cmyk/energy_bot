@@ -2,7 +2,7 @@ from aiogram import Router, Bot, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
 
-from keyboards import quick_calc_kb
+from keyboards import quick_calc_kb, calculator_kb
 
 router = Router()
 
@@ -32,5 +32,8 @@ async def quick_calc(callback: CallbackQuery, bot: Bot):
         f"Среднее потребление: <b>{kwh}</b> кВт·ч/мес\n"
         f"Стоимость (±15%): <b>{min_cost:.0f} — {max_cost:.0f} руб</b>")
 
-
+@router.callback_query(F.data == 'otmena')
+async def otmena(callback: CallbackQuery):
+    await callback.answer()
+    await callback.message.edit_text("❌ Отмена")
 
