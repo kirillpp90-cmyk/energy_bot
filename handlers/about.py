@@ -10,7 +10,7 @@ async def about(message: Message):
     await message.answer(f'ℹ️ <b>Бот-калькулятор энергопотребления</b>\n\n'
                          '🔋 Версия 1.0\n\n'
                          "Ссылка на репозиторий — <a href='https://github.com/kirillpp90-cmyk/energy_bot'>energy_bot</a>\n\n"
-                         '👨‍💻 Автор: <a href="tg://user?id=5548414556">Кирилл</a>, <a href="tg://user?id=5824908389">Дмитрий</a>\n\n'
+                         "👨‍💻 Автор: <a href='tg://user?id=5548414556'>Кирилл</a>, <a href='tg://user?id=5824908389'>Дмитрий</a>\n\n"
                          '📋 <b>Доступные команды:</b>\n'
                          '/start - Начать работу\n'
                          '/calc - Калькулятор\n'
