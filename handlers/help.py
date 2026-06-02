@@ -12,18 +12,44 @@ router = Router()
 @router.message(F.text == '❓ Помощь')
 @router.message(Command('help'))
 async def help_def(message: Message, state: FSMContext):
-    await message.answer('📝 Опишите вашу проблему, и я помогу вам! \n\nВаше сообщение будет отправлено администратору для решения.', reply_markup=cancel_kb)
+    await message.answer(
+        '📝 Опишите вашу проблему. Вы можете отправить текст, фото, видео, документ или GIF.\n\n'
+        'Ваше сообщение будет отправлено администратору.',
+        reply_markup=cancel_kb
+    )
     await state.set_state(HelpState.waiting_question)
+
 
 @router.message(HelpState.waiting_question)
 async def process_question(message: Message, state: FSMContext, bot: Bot):
-    msg = message.text
-    id_user = message.from_user.id
-    username_user = message.from_user.username
-    if admin_ids:
-        await bot.send_message(admin_ids[0], f"📨 Новое сообщение в поддержку!\n\n👤 Пользователь: {id_user} (@{username_user})\n\n💬 Сообщение:\n{msg}")
+    user_id = message.from_user.id
+    username = message.from_user.username or "нет username"
+
+    if not admin_ids:
+        await message.answer("❌ Администраторы не настроены.", reply_markup=calculator_kb)
         await state.clear()
-        await message.answer("✅ Ваше сообщение успешно отправлено в поддержку! 🎯\n\nМы свяжемся с вами в ближайшее время. 💙", reply_markup=calculator_kb)
-    else:
-        await state.clear()
-        await message.answer("❌ Не удалось отправить сообщение. Администраторы не настроены.", reply_markup=calculator_kb)
+        return
+
+    admin_id = admin_ids[0]
+
+    # Информация о пользователе
+    await bot.send_message(
+        admin_id,
+        f"📨 Новое сообщение в поддержку!\n\n"
+        f"👤 ID: {user_id}\n"
+        f"👤 Username: @{username}"
+    )
+
+    # Копируем любое сообщение (поддерживает фото, видео, гифки, документы)
+    try:
+        await bot.copy_message(
+            chat_id=admin_id,
+            from_chat_id=user_id,
+            message_id=message.message_id
+        )
+        await message.answer("✅ Сообщение отправлено в поддержку!", reply_markup=calculator_kb)
+    except Exception as e:
+        await message.answer("❌ Не удалось отправить.", reply_markup=calculator_kb)
+        print(f"Ошибка пересылки: {e}")
+
+    await state.clear()

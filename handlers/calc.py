@@ -7,7 +7,8 @@ from aiogram.filters import Command
 from states import CalcState
 from keyboards import cancel_kb, calculator_kb, save_after_calc_kb
 from utils import calculate_energy
-from database import init_db   # пока не используем, но оставим для будущего
+from database import get_user_tariff
+
 
 router = Router(name="calc_router")
 
@@ -62,32 +63,21 @@ async def process_days(message: Message, state: FSMContext):
     try:
         days = float(message.text.replace(',', '.'))
         if days < 0:
-            await message.answer("❌ Количество дней не может быть отрицательным. Введите корректное число:", reply_markup=cancel_kb)
+            await message.answer("❌ Количество дней не может быть отрицательным. Введите корректное число:",
+                                 reply_markup=cancel_kb)
             return
         await state.update_data(days=days)
-        await message.answer("💰 Теперь введите тариф за 1 кВт·ч (в рублях):")
-        await state.set_state(CalcState.waiting_tariff)
-    except ValueError:
-        await message.answer("❌ Ошибка! Пожалуйста, введите корректное число.", reply_markup=cancel_kb)
 
+        tariff = await get_user_tariff(message.from_user.id)
 
-@router.message(CalcState.waiting_tariff)
-async def process_tariff(message: Message, state: FSMContext):
-    try:
-        tariff = float(message.text.replace(',', '.'))
-        if tariff < 0:
-            await message.answer("❌ Тариф не может быть отрицательным. Введите корректное число:", reply_markup=cancel_kb)
-            return
         data = await state.get_data()
-
         total_kwh, cost = calculate_energy(
             data['power'],
             data['hours'],
-            data['days'],
+            days,
             tariff
         )
 
-        # Небольшая анимация подсчёта (как было у тебя)
         msg = await message.answer("🔄 Начинаю расчёт...")
         await sleep(0.6)
         await msg.edit_text("33%...")
@@ -99,26 +89,27 @@ async def process_tariff(message: Message, state: FSMContext):
         await msg.edit_text("100%...")
         await sleep(0.3)
 
-        await msg.edit_text(f"📊 Результаты расчёта:\n\n"
-                           f"⚡ Энергопотребление: <b>{total_kwh:.2f}</b> кВт·ч\n"
-                           f"💰 Стоимость: <b>{cost:.2f}</b> рублей\n\n"
-                           f"🎉 Расчёт завершён успешно!", parse_mode="HTML")
-        
-        # Сохраняем данные в состоянии для возможного сохранения прибора
+        await msg.edit_text(
+            f"📊 Результаты расчёта:\n\n"
+            f"⚡ Энергопотребление: <b>{total_kwh:.2f}</b> кВт·ч\n"
+            f"💰 Стоимость: <b>{cost:.2f}</b> рублей (тариф {tariff} руб/кВт·ч)\n\n"
+            f"🎉 Расчёт завершён успешно!",
+            parse_mode="HTML"
+        )
+
         await state.update_data(
             power=data['power'],
-            hours=data['hours'], 
-            days=data['days'],
+            hours=data['hours'],
+            days=days,
             tariff=tariff,
             total_kwh=total_kwh,
             cost=cost
         )
-        
+
         await message.answer('💾 Хотите сохранить этот прибор?', reply_markup=save_after_calc_kb)
 
     except ValueError:
         await message.answer("❌ Ошибка! Пожалуйста, введите корректное число.", reply_markup=cancel_kb)
-
 
 @router.callback_query(F.data == 'save_from_calc')
 async def save_from_calc(callback: CallbackQuery, state: FSMContext):

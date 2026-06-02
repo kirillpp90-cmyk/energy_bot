@@ -10,7 +10,7 @@ calculator_kb = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text='📊 Калькулятор'), KeyboardButton(text='📱 Приборы')],
         [KeyboardButton(text='ℹ️ О боте'), KeyboardButton(text='❓ Помощь')],
-        [KeyboardButton(text='⚡ Быстрый расчёт')]
+        [KeyboardButton(text='⚡ Быстрый расчёт')], [KeyboardButton(text='💰 Тариф')]
     ],
     resize_keyboard=True
 )
@@ -47,3 +47,16 @@ quick_calc_kb = InlineKeyboardMarkup(
         [InlineKeyboardButton(text="❌ Отмена", callback_data="otmena")]
     ]
 )
+def get_devices_kb(devices):
+    keyboard = []
+    for device in devices:
+        keyboard.append([
+            InlineKeyboardButton(
+                text=f"🗑 Удалить {device['name']}",
+                callback_data=f"delete_{device['id']}"
+            )
+        ])
+    keyboard.append([
+        InlineKeyboardButton(text="📊 Рассчитать всё", callback_data="calculate_all")
+    ])
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)

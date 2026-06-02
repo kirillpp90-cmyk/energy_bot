@@ -39,21 +39,24 @@ async def get_all_users_info():
 
 
 async def init_db():
-    """Создаёт таблицы users и devices, если их нет"""
     connect = await aiosqlite.connect('db.db')
     cursor = await connect.cursor()
 
-    # Таблица users
     await cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             user_id INTEGER PRIMARY KEY,
             username TEXT,
             first_name TEXT,
-            last_name TEXT
+            last_name TEXT,
+            tariff REAL DEFAULT 5.5
         )
     ''')
 
-    # Таблица devices
+    await cursor.execute("PRAGMA table_info(users)")
+    columns = [column[1] for column in await cursor.fetchall()]
+    if 'tariff' not in columns:
+        await cursor.execute("ALTER TABLE users ADD COLUMN tariff REAL DEFAULT 5.5")
+
     await cursor.execute('''
         CREATE TABLE IF NOT EXISTS devices (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -70,6 +73,29 @@ async def init_db():
     await connect.close()
     print("База данных инициализирована (db.db) с таблицами users и devices")
 
+async def get_user_tariff(user_id: int) -> float:
+    """Возвращает тариф пользователя (руб/кВт·ч)"""
+    connect = await aiosqlite.connect('db.db')
+    cursor = await connect.cursor()
+    await cursor.execute('SELECT tariff FROM users WHERE user_id = ?', (user_id,))
+    row = await cursor.fetchone()
+    await cursor.close()
+    await connect.close()
+    if row:
+        return row[0]
+    return 5.5
+
+async def update_user_tariff(user_id: int, tariff: float):
+    """Обновляет тариф пользователя"""
+    async with _db_lock:
+        connect = await aiosqlite.connect('db.db')
+        cursor = await connect.cursor()
+        try:
+            await cursor.execute('UPDATE users SET tariff = ? WHERE user_id = ?', (tariff, user_id))
+            await connect.commit()
+        finally:
+            await cursor.close()
+            await connect.close()
 
 async def get_or_create_user(user_id: int, first_name: str = None, last_name: str = None, username: str = None):
     """Проверяет, есть ли пользователь в БД, если нет — создаёт с защитой от гонок"""
@@ -80,8 +106,8 @@ async def get_or_create_user(user_id: int, first_name: str = None, last_name: st
             await cursor.execute('SELECT user_id FROM users WHERE user_id = ?', (user_id,))
             exists = await cursor.fetchone()
             if not exists:
-                await cursor.execute('INSERT INTO users (user_id, first_name, last_name, username) VALUES (?, ?, ?, ?)', 
-                                   (user_id, first_name, last_name, username))
+                await cursor.execute('INSERT INTO users (user_id, first_name, last_name, username, tariff) VALUES (?, ?, ?, ?, ?)',
+                                     (user_id, first_name, last_name, username, 5.5))
                 await connect.commit()
         finally:
             await cursor.close()
