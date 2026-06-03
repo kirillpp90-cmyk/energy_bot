@@ -7,8 +7,7 @@ from aiogram.filters import Command
 from states import CalcState
 from keyboards import cancel_kb, calculator_kb, save_after_calc_kb
 from utils import calculate_energy
-from database import get_user_tariff
-
+from database import get_user_tariff, add_device
 
 router = Router(name="calc_router")
 
@@ -27,7 +26,7 @@ async def start_calc(message: Message, state: FSMContext):
 @router.message(F.text.casefold() == "отмена")
 async def otmena(message: Message, state: FSMContext):
     await state.clear()
-    await message.answer("❌Отменено❌", reply_markup=calculator_kb)
+    await message.answer("❌ Отменено", reply_markup=calculator_kb)
 
 
 @router.message(CalcState.waiting_power)
@@ -35,7 +34,10 @@ async def process_power(message: Message, state: FSMContext):
     try:
         power = float(message.text.replace(',', '.'))
         if power < 0:
-            await message.answer("❌ Мощность не может быть отрицательной. Введите корректное число:", reply_markup=cancel_kb)
+            await message.answer(
+                "❌ Мощность не может быть отрицательной. Введите корректное число:",
+                reply_markup=cancel_kb
+            )
             return
         await state.update_data(power=power)
         await message.answer("⏰ Теперь введите количество часов работы в сутки:")
@@ -49,7 +51,10 @@ async def process_hours(message: Message, state: FSMContext):
     try:
         hours = float(message.text.replace(',', '.'))
         if hours < 0:
-            await message.answer("❌ Часы не могут быть отрицательными. Введите корректное число:", reply_markup=cancel_kb)
+            await message.answer(
+                "❌ Часы не могут быть отрицательными. Введите корректное число:",
+                reply_markup=cancel_kb
+            )
             return
         await state.update_data(hours=hours)
         await message.answer("📅 Теперь введите количество дней:")
@@ -63,11 +68,14 @@ async def process_days(message: Message, state: FSMContext):
     try:
         days = float(message.text.replace(',', '.'))
         if days < 0:
-            await message.answer("❌ Количество дней не может быть отрицательным. Введите корректное число:",
-                                 reply_markup=cancel_kb)
+            await message.answer(
+                "❌ Количество дней не может быть отрицательным. Введите корректное число:",
+                reply_markup=cancel_kb
+            )
             return
         await state.update_data(days=days)
 
+        # Берём тариф из БД — не спрашиваем пользователя
         tariff = await get_user_tariff(message.from_user.id)
 
         data = await state.get_data()
@@ -78,6 +86,7 @@ async def process_days(message: Message, state: FSMContext):
             tariff
         )
 
+        # Анимация подсчёта
         msg = await message.answer("🔄 Начинаю расчёт...")
         await sleep(0.6)
         await msg.edit_text("33%...")
@@ -92,11 +101,12 @@ async def process_days(message: Message, state: FSMContext):
         await msg.edit_text(
             f"📊 Результаты расчёта:\n\n"
             f"⚡ Энергопотребление: <b>{total_kwh:.2f}</b> кВт·ч\n"
-            f"💰 Стоимость: <b>{cost:.2f}</b> рублей (тариф {tariff} руб/кВт·ч)\n\n"
+            f"💰 Стоимость: <b>{cost:.2f}</b> руб (тариф {tariff} руб/кВт·ч)\n\n"
             f"🎉 Расчёт завершён успешно!",
             parse_mode="HTML"
         )
 
+        # Сохраняем данные в state для возможного сохранения прибора
         await state.update_data(
             power=data['power'],
             hours=data['hours'],
@@ -111,15 +121,11 @@ async def process_days(message: Message, state: FSMContext):
     except ValueError:
         await message.answer("❌ Ошибка! Пожалуйста, введите корректное число.", reply_markup=cancel_kb)
 
+
 @router.callback_query(F.data == 'save_from_calc')
 async def save_from_calc(callback: CallbackQuery, state: FSMContext):
-    """Сохранение прибора из данных калькулятора"""
     await callback.answer()
-    
-    # Получаем данные из состояния
     data = await state.get_data()
-    
-    # Запрашиваем только название прибора, остальные данные уже есть
     await state.set_state(CalcState.waiting_device_name)
     await callback.message.answer(
         "✍️ Введите название для сохранения прибора:\n\n"
@@ -131,7 +137,6 @@ async def save_from_calc(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data == 'new_calc')
 async def new_calc(callback: CallbackQuery, state: FSMContext):
-    """Начать новый расчет"""
     await callback.answer()
     await state.clear()
     await callback.message.answer(
@@ -144,47 +149,43 @@ async def new_calc(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data == 'main_menu')
 async def back_to_main_menu(callback: CallbackQuery, state: FSMContext):
-    """Возврат в главное меню"""
+    """Возврат в главное меню — убираем инлайн и отправляем новое с Reply-клавиатурой"""
     await callback.answer()
     await state.clear()
+    # Убираем инлайн-кнопки со старого сообщения
+    await callback.message.edit_reply_markup(reply_markup=None)
+    # Отправляем новое сообщение с Reply-клавиатурой
     await callback.message.answer(
-        "🏠 Вы в главном меню", 
+        "🏠 Вы в главном меню",
         reply_markup=calculator_kb
     )
 
 
 @router.message(CalcState.waiting_device_name)
 async def process_device_name_from_calc(message: Message, state: FSMContext):
-    """Обработка названия прибора из калькулятора"""
     try:
-        name = str(message.text.replace(',', '.'))
-        user_id = int(message.from_user.id)
-        
-        # Получаем сохраненные данные из калькулятора
+        name = message.text.strip()
+        user_id = message.from_user.id
+
         data = await state.get_data()
         power = data['power']
         hours = data['hours']
-        days = int(data['days'])  # days может быть float, преобразуем в int
-        
-        # Сохраняем в базу данных
-        from database import add_device
+        days = int(data['days'])
+
         device_id = await add_device(user_id, name, power, hours, days)
-        
-        # Очищаем состояние
         await state.clear()
-        
-        # Отправляем подтверждение
+
         await message.answer(
-            f'✅ Прибор "{name}" успешно сохранен!\n'
+            f'✅ Прибор "<b>{name}</b>" сохранён!\n\n'
             f'📊 Мощность: {power} Вт\n'
             f'⏰ Часов в день: {hours}\n'
-            f'📅 Дней в месяц: {days}\n\n'
-            f'ID прибора: {device_id}\n\n'
-            f'🔄 Хотите рассчитать что-то ещё?',
+            f'📅 Дней: {days}\n'
+            f'🔑 ID прибора: {device_id}\n\n'
+            f'Посмотреть все приборы: кнопка «📱 Приборы»',
+            parse_mode="HTML",
             reply_markup=calculator_kb
         )
     except Exception as e:
-        # Логируем ошибку для отладки, пользователю показываем общее сообщение
         print(f"Ошибка при сохранении прибора: {e}")
-        await message.answer('❌ Ошибка при сохранении. Попробуйте еще раз.', reply_markup=calculator_kb)
+        await message.answer('❌ Ошибка при сохранении. Попробуйте ещё раз.', reply_markup=calculator_kb)
         await state.clear()
