@@ -19,7 +19,6 @@ Houses = {
 async def quick_calc_start(message: Message):
     await message.answer('⚡ Выберите тип жилья для быстрого расчёта:', reply_markup=quick_calc_kb)
 
-
 @router.callback_query(F.data.startswith('quick_'))
 async def quick_calc_result(callback: CallbackQuery):
     await callback.answer()
@@ -30,7 +29,6 @@ async def quick_calc_result(callback: CallbackQuery):
 
     name, kwh = Houses[key]
 
-    # Берём тариф пользователя из БД
     tariff = await get_user_tariff(callback.from_user.id)
 
     min_cost = kwh * tariff * 0.85
@@ -43,7 +41,6 @@ async def quick_calc_result(callback: CallbackQuery):
         f"Стоимость (±15%): <b>{min_cost:.0f} — {max_cost:.0f} руб</b>\n\n"
         f"<i>Чтобы изменить тариф — нажмите «💰 Тариф» в меню</i>"
     )
-
 
 @router.callback_query(F.data == 'otmena')
 async def otmena_quick(callback: CallbackQuery):

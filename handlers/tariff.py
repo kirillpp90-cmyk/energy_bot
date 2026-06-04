@@ -9,13 +9,11 @@ from states import TariffState
 
 router = Router()
 
-
 def tariff_info_kb():
     """Клавиатура под сообщением с тарифом"""
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="✏️ Изменить тариф", callback_data="change_tariff")]
     ])
-
 
 @router.message(Command("tariff"))
 @router.message(F.text == "💰 Тариф")
@@ -28,7 +26,6 @@ async def show_tariff(message: Message):
         parse_mode="HTML",
         reply_markup=tariff_info_kb()
     )
-
 
 @router.callback_query(F.data == "change_tariff")
 async def change_tariff_callback(callback: CallbackQuery, state: FSMContext):
@@ -51,7 +48,6 @@ async def change_tariff_callback(callback: CallbackQuery, state: FSMContext):
     )
     await state.set_state(TariffState.waiting_tariff_value)
 
-
 @router.message(Command("set_tariff"))
 async def set_tariff_start(message: Message, state: FSMContext):
     """Команда /set_tariff — тоже запускает изменение тарифа"""
@@ -62,7 +58,6 @@ async def set_tariff_start(message: Message, state: FSMContext):
         reply_markup=cancel_kb
     )
     await state.set_state(TariffState.waiting_tariff_value)
-
 
 @router.message(TariffState.waiting_tariff_value)
 async def set_tariff_value(message: Message, state: FSMContext):
@@ -94,7 +89,6 @@ async def set_tariff_value(message: Message, state: FSMContext):
             "❌ Ошибка! Введите корректное число (например, 5.6).",
             reply_markup=cancel_kb
         )
-
 
 @router.message(F.text == "Отмена", TariffState.waiting_tariff_value)
 async def cancel_tariff(message: Message, state: FSMContext):

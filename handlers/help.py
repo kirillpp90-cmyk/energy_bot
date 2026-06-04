@@ -19,7 +19,6 @@ async def help_def(message: Message, state: FSMContext):
     )
     await state.set_state(HelpState.waiting_question)
 
-
 @router.message(HelpState.waiting_question)
 async def process_question(message: Message, state: FSMContext, bot: Bot):
     user_id = message.from_user.id
@@ -32,7 +31,6 @@ async def process_question(message: Message, state: FSMContext, bot: Bot):
 
     admin_id = admin_ids[0]
 
-    # Информация о пользователе
     await bot.send_message(
         admin_id,
         f"📨 Новое сообщение в поддержку!\n\n"
@@ -40,7 +38,6 @@ async def process_question(message: Message, state: FSMContext, bot: Bot):
         f"👤 Username: @{username}"
     )
 
-    # Копируем любое сообщение (поддерживает фото, видео, гифки, документы)
     try:
         await bot.copy_message(
             chat_id=admin_id,

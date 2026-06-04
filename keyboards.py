@@ -29,7 +29,6 @@ admin_cancel_kb = InlineKeyboardMarkup(
     ]
 )
 
-
 save_after_calc_kb = InlineKeyboardMarkup(
     inline_keyboard=[
         [InlineKeyboardButton(text="💾 Сохранить прибор", callback_data='save_from_calc')],

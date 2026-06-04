@@ -7,7 +7,6 @@ from keyboards import get_devices_kb, calculator_kb
 
 router = Router()
 
-
 @router.message(F.text == "📱 Приборы")
 @router.message(Command("mydevices"))
 async def my_devices(message: Message):
