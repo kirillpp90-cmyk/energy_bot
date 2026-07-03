@@ -4,4 +4,4 @@ __pycache__/
 .venv/
 nul
 .idea
-*.pyc
+*.pyc.idea
